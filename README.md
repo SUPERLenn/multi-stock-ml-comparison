@@ -183,10 +183,11 @@ multi-stock-ml-comparison/
 ├── README.md                           # Project documentation
 ├── LICENSE                             # MIT License
 ├── .gitignore                          # Git ignore rules
-├── multi_stocks_analysis.txt           # Generated results
-├── mae_comparison_grouped.png          # MAE visualization
-├── rmse_comparison_grouped.png         # RMSE visualization
-└── r2_comparison_grouped.png           # R² visualization
+├── results/                            # Generated results
+│   ├── multi_stocks_analysis.txt       # Output
+│   ├── mae_comparison_grouped.png      # MAE visualization
+│   ├── rmse_comparison_grouped.png     # RMSE visualization
+│   └── r2_comparison_grouped.png       # R² visualization        
 ```
 
 ## Contributing
