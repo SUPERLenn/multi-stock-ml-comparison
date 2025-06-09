@@ -73,7 +73,6 @@ This research compares machine learning algorithms for financial time series pre
 - **R² Wins**: LSTM (4), XGBoost (1), Random Forest (0)
 
 ## Installation
-## Installation
 
 1. (Optional) Create and activate a virtual environment:
 ```bash
