@@ -88,7 +88,7 @@ pip install -r requirements.txt
 
 ### Requirements
 
-- **Python**: 3.10 or below (tested with 3.9 & 3.10 only)  
+- **Python**: 3.11 or below (tested with 3.11)  
   ⚠️ TensorFlow (used for LSTM) **is not yet compatible with Python ≥ 3.12**.
   
 ### Dependencies
