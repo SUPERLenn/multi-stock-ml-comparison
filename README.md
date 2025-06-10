@@ -81,11 +81,16 @@ source venv/bin/activate       # Mac/Linux
 venv\Scripts\activate.bat      # Windows
 
 
-### Requirements
+### Testing the Environment
 ```bash
 pip install -r requirements.txt
 ```
 
+### Requirements
+
+- **Python**: 3.10 or below (tested with 3.9 & 3.10 only)  
+  ⚠️ TensorFlow (used for LSTM) **is not yet compatible with Python ≥ 3.12**.
+  
 ### Dependencies
 - pandas >= 1.5.0
 - numpy >= 1.21.0
