@@ -268,18 +268,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ⚠️ **Important**: This project is for educational and research purposes only. It is not financial advice. Past performance does not guarantee future results. The negative R² values indicate that short-term stock return prediction remains extremely challenging. Always consult with qualified financial professionals before making investment decisions.
 
-## Citation
-
-If you use this work in your research, please cite:
-```bibtex
-@article{multi_stock_ml_comparison_2024,
-  title={A Comparative Analysis of Machine Learning Algorithms for Multi-Stock Return Prediction and Trading Signal Generation},
-  author={Anonymous Authors},
-  journal={Under Review},
-  year={2024}
-}
-```
-
 ---
 
 **Built with Python, TensorFlow, XGBoost, and scikit-learn**  
