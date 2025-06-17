@@ -46,12 +46,12 @@ This research compares machine learning algorithms for financial time series pre
 ### 1. Random Forest
 - **Type**: Ensemble method with decision trees
 - **Hyperparameters**: n_estimators, max_depth, min_samples_split
-- **Optimization**: RandomizedSearchCV with 3-fold cross-validation
+- **Optimization**: RandomizedSearchCV with 3-fold TimeSeriesSplit
 
 ### 2. XGBoost
 - **Type**: Gradient boosting with advanced regularization  
 - **Hyperparameters**: n_estimators, max_depth, learning_rate
-- **Optimization**: RandomizedSearchCV with 3-fold cross-validation
+- **Optimization**: RandomizedSearchCV with 3-fold TimeSeriesSplit
 
 ### 3. LSTM Neural Network
 - **Type**: Deep learning with sequential memory for time series
@@ -63,26 +63,51 @@ This research compares machine learning algorithms for financial time series pre
 ### Algorithm Performance Summary
 | Algorithm | Avg MAE | Avg RMSE | Avg R² | Total Wins |
 |-----------|---------|----------|---------|------------|
-| **LSTM** | 0.01181 | 0.01690 | -0.01657 | **11** |
-| **XGBoost** | 0.01206 | 0.01755 | -0.12517 | 4 |
-| **Random Forest** | 0.01625 | 0.02192 | -0.71215 | 0 |
+| **LSTM** | 0.00999 | 0.01356 | -0.04537 | **12** |
+| **XGBoost** | 0.01062 | 0.01433 | -0.15458 | 3 |
+| **Random Forest** | 0.01361 | 0.01767 | -0.74144 | 0 |
 
 ### Performance Wins by Metric
-- **MAE Wins**: LSTM (3), XGBoost (2), Random Forest (0)
+- **MAE Wins**: LSTM (4), XGBoost (1), Random Forest (0)
 - **RMSE Wins**: LSTM (4), XGBoost (1), Random Forest (0)  
 - **R² Wins**: LSTM (4), XGBoost (1), Random Forest (0)
 
-## Installation
+## Trading Signal Performance
+
+### Signal Generation by Sector
+- **Technology (AAPL)**: 11.2% action signals (5 buy, 27 sell signals)
+- **Financial (JPM)**: 1.4% action signals (1 buy, 3 sell signals)  
+- **Consumer Retail (AMZN)**: 0% action signals (complete conservatism)
+- **Energy (XOM)**: 1.7% action signals (0 buy, 5 sell signals)
+- **Healthcare (JNJ)**: 0% action signals (complete conservatism)
+
+### Signal Accuracy Framework
+- **Threshold**: ±0.5% for buy/sell decisions
+- **Conservative Approach**: 88.8% - 100% hold signals across sectors
+- **Sector Variability**: Technology shows highest activity, Healthcare most conservative
+- **Model Used**: LSTM-based predictions for signal generation
+
 ## Installation
 
-1. (Optional) Create and activate a virtual environment:
+### Prerequisites
+- Python 3.8+ 
+- NVIDIA GPU (optional, for LSTM acceleration)
+
+### Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/multi-stock-ml-comparison.git
+cd multi-stock-ml-comparison
+```
+
+2. (Optional) Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate       # Mac/Linux
 venv\Scripts\activate.bat      # Windows
+```
 
-
-### Requirements
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -100,14 +125,14 @@ pip install -r requirements.txt
 
 ### Basic Execution
 ```bash
-python src/stock_algorithm_comparison.py
+python stock_algorithm_comparison.py
 ```
 
 ### Expected Runtime
-- **Data Collection**: ~30 seconds
-- **Feature Engineering**: ~15 seconds  
-- **Model Training**: 5-10 minutes (depending on hardware)
-- **Visualization**: ~10 seconds
+- **Data Collection**: ~30 seconds (5 stocks × 6 years)
+- **Feature Engineering**: ~15 seconds (28 indicators per stock)
+- **Model Training**: 5-10 minutes (hyperparameter optimization)
+- **Visualization**: ~10 seconds (3 comparison charts)
 
 ## Output Files
 
@@ -117,53 +142,57 @@ python src/stock_algorithm_comparison.py
 - `rmse_comparison_grouped.png` - Root Mean Squared Error comparison chart
 - `r2_comparison_grouped.png` - R² Score comparison chart
 
-### Trading Signals
-- **Buy Signal**: Predicted return > 0.5%
-- **Sell Signal**: Predicted return < -0.5%
-- **Hold Signal**: Predicted return between -0.5% and 0.5%
+### Expected Results
+After running the analysis, you should see:
+- **LSTM wins 12/15 performance metrics** across all stocks
+- **Negative R² values** (typical for short-term stock prediction)
+- **Conservative trading signals** with 0-11.2% action frequency
+- **Sector-specific patterns** in model performance and signal generation
 
 ## Dataset Information
 
-- **Time Period**: 2019-2025 (6+ years of daily data)
+- **Time Period**: January 2019 to December 2024 (6 years of daily data)
 - **Data Source**: Yahoo Finance via yfinance library
-- **Training/Testing Split**: 80/20 (time series split)
-- **Sample Size**: ~1,562 trading days per stock
-- **Cross-Validation**: 3-fold for hyperparameter optimization
+- **Training/Testing Split**: 80/20 time series split (1,167 train / 292 test)
+- **Sample Size**: 1,459 trading days per stock (after preprocessing)
+- **Total Data Points**: 204,260 (1,459 days × 5 stocks × 28 features)
+- **Cross-Validation**: 3-fold TimeSeriesSplit for hyperparameter optimization
 
 ## Methodology
 
 ### 1. Data Collection & Preprocessing
-- Historical stock data download
-- Data quality validation
-- Missing value handling
+- Historical stock data download (1,509 → 1,459 valid samples)
+- Data quality validation (100% completeness achieved)
+- Missing value handling with forward-fill interpolation
 
 ### 2. Feature Engineering  
 - 28 technical indicators calculation
-- Feature scaling (MinMaxScaler)
+- Feature scaling (MinMaxScaler to [0,1] range)
 - Target variable creation (next-day returns)
 
 ### 3. Model Training & Evaluation
 - Hyperparameter optimization via RandomizedSearchCV
-- Time series cross-validation
+- Time series cross-validation (3-fold TimeSeriesSplit)
 - Performance evaluation (MAE, RMSE, R²)
 
 ### 4. Trading Signal Generation
 - Threshold-based signal creation (±0.5%)
-- Signal accuracy calculation
-- Performance comparison across algorithms
+- Signal accuracy calculation vs actual market direction
+- Performance comparison across algorithms and sectors
 
 ### 5. Results Analysis & Visualization
 - Statistical performance comparison
-- Win-count analysis across metrics
-- Automated chart generation
+- Win-count analysis across 15 metrics (3 metrics × 5 stocks)
+- Automated chart generation with matplotlib
 
 ## Key Findings
 
-1. **LSTM Superior Performance**: Achieved best overall results across all evaluation metrics
-2. **Cross-Sector Consistency**: Performance patterns consistent across different industries  
+1. **LSTM Superior Performance**: Achieved best results in 12/15 performance metrics
+2. **Cross-Sector Consistency**: Performance patterns consistent across Technology, Financial, Consumer Retail, Energy, and Healthcare sectors
 3. **Technical Indicator Effectiveness**: 28-feature engineering approach provides robust prediction foundation
-4. **Algorithm Generalizability**: Multi-stock analysis confirms model reliability across sectors
-5. **Trading Signal Potential**: LSTM-based signals show promising directional accuracy
+4. **Algorithm Generalizability**: Multi-stock analysis confirms LSTM reliability across diverse market sectors
+5. **Conservative Trading Signals**: Most sectors show 0-1.7% action signals, with Technology sector most active (11.2%)
+6. **Sector-Specific Behavior**: Healthcare and Consumer Retail show complete conservatism, Financial and Energy show moderate activity
 
 ## Research Applications
 
@@ -171,7 +200,7 @@ This study is suitable for:
 - **Academic Research**: Financial machine learning and algorithmic trading studies
 - **Industry Applications**: Quantitative trading strategy development
 - **Educational Purposes**: Machine learning in finance coursework
-- **Portfolio Management**: Risk assessment and return prediction
+- **Portfolio Management**: Risk assessment and return prediction across sectors
 
 ## Project Structure
 
@@ -179,24 +208,47 @@ This study is suitable for:
 multi-stock-ml-comparison/
 ├── src/
 │   └── stock_algorithm_comparison.py    # Main analysis script
+├── results/
+│   ├── multi_stocks_analysis.txt        # Generated results
+│   ├── mae_comparison_grouped.png       # MAE visualization
+│   ├── rmse_comparison_grouped.png      # RMSE visualization
+│   └── r2_comparison_grouped.png        # R² visualization
 ├── requirements.txt                     # Project dependencies
 ├── README.md                           # Project documentation
 ├── LICENSE                             # MIT License
-├── .gitignore                          # Git ignore rules
-├── multi_stocks_analysis.txt           # Generated results
-├── mae_comparison_grouped.png          # MAE visualization
-├── rmse_comparison_grouped.png         # RMSE visualization
-└── r2_comparison_grouped.png           # R² visualization
+└── .gitignore                          # Git ignore rules
 ```
+
+## Model Performance Details
+
+### Individual Stock Results
+- **Best performing stock**: JNJ (Healthcare) - most stable predictions
+- **Most challenging stock**: AMZN (Consumer Retail) - highest volatility
+- **Technology sector (AAPL)**: Moderate performance with highest signal activity
+- **Financial sector (JPM)**: Good performance with conservative signals
+- **Energy sector (XOM)**: Good performance with bearish signal bias
+
+### Algorithm Strengths
+- **LSTM**: Superior at capturing temporal dependencies and sequential patterns
+- **XGBoost**: Competitive performance with faster training times
+- **Random Forest**: Consistent underperformance due to lack of time-aware modeling
 
 ## Contributing
 
 Contributions are welcome! Areas for enhancement:
-- Additional technical indicators
-- More sophisticated neural network architectures  
-- Extended stock universe
-- Alternative evaluation metrics
-- Real-time data integration
+- Additional technical indicators (Stochastic, Williams %R, etc.)
+- More sophisticated neural network architectures (Transformer, GRU)
+- Extended stock universe (international markets, different sectors)
+- Alternative evaluation metrics (Sharpe ratio, drawdown analysis)
+- Real-time data integration and live trading simulation
+
+## Future Research Directions
+
+- **Multi-timeframe analysis**: Incorporating hourly and weekly patterns
+- **Sentiment integration**: Adding news sentiment and social media data
+- **Ensemble methods**: Combining LSTM and XGBoost predictions
+- **Risk-adjusted metrics**: Incorporating volatility-adjusted performance measures
+- **Market regime analysis**: Performance during bull vs bear markets
 
 ## License
 
@@ -204,8 +256,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Disclaimer
 
-This project is for educational and research purposes only. It is not financial advice. Past performance does not guarantee future results. Always consult with qualified financial professionals before making investment decisions.
+⚠️ **Important**: This project is for educational and research purposes only. It is not financial advice. Past performance does not guarantee future results. The negative R² values indicate that short-term stock return prediction remains extremely challenging. Always consult with qualified financial professionals before making investment decisions.
+
+## Citation
+
+If you use this work in your research, please cite:
+```bibtex
+@article{multi_stock_ml_comparison_2024,
+  title={A Comparative Analysis of Machine Learning Algorithms for Multi-Stock Return Prediction and Trading Signal Generation},
+  author={Anonymous Authors},
+  journal={Under Review},
+  year={2024}
+}
+```
 
 ---
 
-**Built with Python, TensorFlow, XGBoost, and scikit-learn**
+**Built with Python, TensorFlow, XGBoost, and scikit-learn**  
+**Research Period**: 2019-2024 | **Dataset**: 204,260 data points | **Best Algorithm**: LSTM

@@ -41,7 +41,9 @@ except:
     pass
 
 # Start analysis with header message
-force_print("STARTING 3 ALGORITHMS COMPARISON ON MULTIPLE STOCKS")
+force_print("STARTING 3 ALGORITHMS COMPARISON ON MULTIPLE STOCKS (2019-2024 DATA)")
+force_print("Data Period: Historical stock data from Yahoo Finance")
+force_print("Time Range: January 2019 to December 2024")
 
 try:
     # Import core data science and machine learning libraries
@@ -51,7 +53,7 @@ try:
     
     # Import scikit-learn components for machine learning
     from sklearn.ensemble import RandomForestRegressor      # Random Forest algorithm
-    from sklearn.model_selection import RandomizedSearchCV  # Hyperparameter optimization
+    from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit  # Hyperparameter optimization and time series CV
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # Evaluation metrics
     from sklearn.preprocessing import MinMaxScaler          # Feature scaling for neural networks
     import xgboost as xgb        # XGBoost gradient boosting library
@@ -94,7 +96,8 @@ try:
         force_print(f"Processing {symbol} - {info['name']}...")
         try:
             # Download 6+ years of daily stock data from Yahoo Finance
-            df = yf.download(symbol, start='2019-01-01', end='2025-06-01', progress=False)
+            df = yf.download(symbol, start='2019-01-01', end='2024-12-31', progress=False)
+            df = df.fillna(method='ffill')  # Forward-fill missing values
             
             # Check if we have sufficient data for analysis
             if len(df) < 100:
@@ -102,6 +105,8 @@ try:
                 continue
             
             force_print(f"Downloaded {len(df)} trading days for {symbol}")
+            force_print(f"  Date range: {df.index[0].date()} to {df.index[-1].date()}")
+            force_print(f"  Data completeness: {(len(df.dropna()) / len(df)) * 100:.1f}%")
             all_stocks_data[symbol] = df  # Store the data
             
         except Exception as e:
@@ -112,7 +117,17 @@ try:
 
     # ===== TECHNICAL FEATURE ENGINEERING FUNCTION =====
     def create_technical_features(df, symbol):
-        """Create 28 technical indicators from raw OHLCV data"""
+        """
+        Create 28 technical indicators from raw OHLCV data:
+        - Basic OHLCV: 5 features (Open, High, Low, Close, Volume)  
+        - Return metrics: 4 features (Returns, Log_Returns, Price_Range, High_Low_Ratio)
+        - Simple Moving Averages: 4 features (SMA_5, 10, 20, 50)
+        - EMA & MACD: 6 features (EMA_12, 26, 50, MACD, MACD_Signal, MACD_Histogram)  
+        - RSI & Bollinger Bands: 4 features (RSI_14, BB_Upper, BB_Lower, BB_Width)
+        - ATR & Volume indicators: 3 features (ATR_14, Volume_SMA, Volume_Ratio)
+        - Volatility measures: 2 features (Volatility_10, Volatility_30)
+        Total: 28 features
+        """
         force_print(f"  Creating technical features for {symbol}...")
         
         # Initialize new dataframe for features
@@ -265,6 +280,9 @@ try:
     # List to store results for all stocks
     results_summary = []
 
+    # Setup time series cross-validation
+    tscv = TimeSeriesSplit(n_splits=3)
+
     # Loop through each stock for analysis
     for symbol in processed_data.keys():
         force_print(f"\n{'='*60}")
@@ -310,13 +328,13 @@ try:
                 'min_samples_split': [2, 5, 10]       # Minimum samples to split node
             }
             
-            # Use RandomizedSearchCV for hyperparameter optimization
+            # Use RandomizedSearchCV for hyperparameter optimization with time series CV
             rf_model = RandomizedSearchCV(
-                RandomForestRegressor(random_state=42),  # Base model
-                rf_params,                               # Parameter grid
-                n_iter=5,                               # Try 5 combinations
-                cv=3,                                   # 3-fold cross-validation
-                n_jobs=-1                               # Use all CPU cores
+                RandomForestRegressor(random_state=42),
+                rf_params,
+                n_iter=5,
+                cv=tscv,  # Time series cross-validation
+                n_jobs=-1
             )
             
             # Train the model
@@ -352,12 +370,12 @@ try:
                 'learning_rate': [0.01, 0.1]     # Learning rate (step size)
             }
             
-            # Use RandomizedSearchCV for hyperparameter optimization
+            # Use RandomizedSearchCV for hyperparameter optimization with time series CV
             xgb_model = RandomizedSearchCV(
                 xgb.XGBRegressor(objective='reg:squarederror', random_state=42),  # Base model
                 xgb_params,                      # Parameter grid
                 n_iter=4,                       # Try 4 combinations
-                cv=3,                           # 3-fold cross-validation
+                cv=tscv,                        # Time series cross-validation
                 n_jobs=-1                       # Use all CPU cores
             )
             
@@ -460,24 +478,90 @@ try:
 
         # Generate trading signals based on predictions
         signals = generate_signal(pred_return, threshold=0.005)  # 0.5% threshold
-        
+
         # Calculate signal statistics
         n_buy = np.sum(signals == 'Buy')     # Number of buy signals
         n_sell = np.sum(signals == 'Sell')   # Number of sell signals
         n_hold = np.sum(signals == 'Hold')   # Number of hold signals
-        
+
         # Calculate signal accuracy
-        buy_acc = np.mean((signals == 'Buy') & (y_true > 0)) if n_buy > 0 else 0    # Buy accuracy
-        sell_acc = np.mean((signals == 'Sell') & (y_true < 0)) if n_sell > 0 else 0  # Sell accuracy
+        buy_acc = np.mean((signals == 'Buy') & (y_true > 0)) if n_buy > 0 else 0
+        sell_acc = np.mean((signals == 'Sell') & (y_true < 0)) if n_sell > 0 else 0
 
-        force_print(f"TRADING SIGNAL ({signal_model}, threshold 0.5%): Buy {n_buy} days ({buy_acc*100:.1f}% correct), Sell {n_sell} days ({sell_acc*100:.1f}% correct), Hold {n_hold} days")
+        # Enhanced trading signal analysis for paper consistency
+        # Store detailed trading results
+        stock_results['buy_signals'] = n_buy
+        stock_results['sell_signals'] = n_sell  
+        stock_results['hold_signals'] = n_hold
+        stock_results['buy_accuracy'] = buy_acc * 100
+        stock_results['sell_accuracy'] = sell_acc * 100
+        stock_results['max_pred_return'] = np.max(pred_return) if len(pred_return) > 0 else 0
+        stock_results['min_pred_return'] = np.min(pred_return) if len(pred_return) > 0 else 0
+        stock_results['signal_model_used'] = signal_model
 
-        # Show extreme predictions for analysis
+        # Detailed trading signal output for paper
+        force_print(f"\n{'='*60}")
+        force_print(f"DETAILED TRADING SIGNAL ANALYSIS for {symbol}")
+        force_print(f"{'='*60}")
+        force_print(f"  Signal Generation Model: {signal_model}")
+        force_print(f"  Total Trading Days: {len(signals)}")
+        force_print(f"  Buy Signals: {n_buy} days ({buy_acc*100:.1f}% directional accuracy)")
+        force_print(f"  Sell Signals: {n_sell} days ({sell_acc*100:.1f}% directional accuracy)")  
+        force_print(f"  Hold Signals: {n_hold} days")
+        force_print(f"  Threshold Used: ±0.5%")
+
+        # Prediction statistics
         if len(pred_return) > 0:
-            top_idx = np.argsort(pred_return)[-3:][::-1]  # Top 3 highest predictions
-            low_idx = np.argsort(pred_return)[:3]         # Top 3 lowest predictions
-            force_print("  Top 3 predicted next-day returns: " + ", ".join([f"{pred_return[i]:.4f}" for i in top_idx]))
-            force_print("  Lowest 3 predicted next-day returns: " + ", ".join([f"{pred_return[i]:.4f}" for i in low_idx]))
+            force_print(f"  Maximum Predicted Return: +{np.max(pred_return)*100:.3f}%")
+            force_print(f"  Minimum Predicted Return: {np.min(pred_return)*100:.3f}%")
+            force_print(f"  Average Predicted Return: {np.mean(pred_return)*100:.3f}%")
+            
+            # Signal-specific statistics
+            if n_buy > 0:
+                buy_returns = pred_return[signals=='Buy']
+                force_print(f"  Average Buy Signal Prediction: +{np.mean(buy_returns)*100:.3f}%")
+                force_print(f"  Buy Signal Range: +{np.min(buy_returns)*100:.3f}% to +{np.max(buy_returns)*100:.3f}%")
+            
+            if n_sell > 0:
+                sell_returns = pred_return[signals=='Sell']
+                force_print(f"  Average Sell Signal Prediction: {np.mean(sell_returns)*100:.3f}%")
+                force_print(f"  Sell Signal Range: {np.min(sell_returns)*100:.3f}% to {np.max(sell_returns)*100:.3f}%")
+
+        # Sector-specific interpretation
+        sector = stocks_info[symbol]['sector']
+        force_print(f"  {sector} Sector Analysis:")
+        if n_buy > n_sell:
+            force_print(f"     • Predominantly bullish signals detected")
+        elif n_sell > n_buy:
+            force_print(f"     • Predominantly bearish signals detected") 
+        else:
+            force_print(f"     • Balanced signal distribution")
+
+        # Trading strategy implications
+        total_action_signals = n_buy + n_sell
+        action_ratio = (total_action_signals / len(signals)) * 100
+        force_print(f"  Strategy Implications:")
+        force_print(f"     • Action signals: {total_action_signals}/{len(signals)} ({action_ratio:.1f}%)")
+        force_print(f"     • Hold ratio: {(n_hold/len(signals))*100:.1f}%")
+
+        if action_ratio < 10:
+            force_print(f"     • Conservative strategy recommended (low signal frequency)")
+        elif action_ratio > 30:
+            force_print(f"     • Active trading strategy indicated (high signal frequency)")
+        else:
+            force_print(f"     • Moderate trading activity suggested")
+
+        force_print(f"{'='*60}")
+
+        # Extreme predictions analysis
+        if len(pred_return) > 0:
+            top_idx = np.argsort(pred_return)[-3:][::-1]
+            low_idx = np.argsort(pred_return)[:3]
+            force_print("EXTREME PREDICTIONS:")
+            force_print("  Top 3 predicted returns: " + ", ".join([f"{pred_return[i]*100:.3f}%" for i in top_idx]))
+            force_print("  Lowest 3 predicted returns: " + ", ".join([f"{pred_return[i]*100:.3f}%" for i in low_idx]))
+
+        force_print("")  # Add blank line for readability
 
         # Add this stock's results to summary
         results_summary.append(stock_results)
@@ -571,11 +655,29 @@ try:
         total_wins = wins[algo]['mae'] + wins[algo]['rmse'] + wins[algo]['r2']
         force_print(f"{algo_names[algo]:<15} {wins[algo]['mae']:<10} {wins[algo]['rmse']:<11} {wins[algo]['r2']:<10} {total_wins:<8}")
 
+    # ===== ACTUAL DATASET STATISTICS =====
+    if processed_data:
+        first_stock = list(processed_data.keys())[0]
+        actual_samples = len(processed_data[first_stock])
+        actual_train_samples = int(0.8 * actual_samples)
+        actual_test_samples = actual_samples - actual_train_samples
+    
+        force_print(f"\nACTUAL DATASET STATISTICS:")
+        force_print(f"{'='*50}")
+        force_print(f"• Total Trading Days per Stock: {actual_samples}")
+        force_print(f"• Training Samples (80%): {actual_train_samples}")
+        force_print(f"• Testing Samples (20%): {actual_test_samples}")
+        force_print(f"• Number of Stocks: {len(processed_data)}")
+        force_print(f"• Features per Sample: {len(feature_columns)}")
+        force_print(f"{'='*50}")
+
     # ===== KEY FINDINGS SUMMARY =====
     force_print(f"\nKEY RESEARCH FINDINGS:")
     force_print(f"• Analyzed {len(results_summary)} major stocks across different sectors")
     force_print(f"• Compared {len(algorithms)} machine learning algorithms")
-    force_print(f"• Dataset period: 2019-2025 with comprehensive technical indicators")
+    force_print(f"• Dataset period: 2019-2024 with comprehensive technical indicators")
+    force_print(f"• Total trading days analyzed: {actual_samples} per stock")
+    force_print(f"• Cross-sector validation across {len(stocks_info)} major industries")
     
     # Determine overall best algorithm
     best_overall = max(algorithms, key=lambda x: wins[x]['mae'] + wins[x]['rmse'] + wins[x]['r2'] if x in wins else 0)
@@ -593,6 +695,9 @@ try:
     force_print("\n" + "="*70)
     force_print("MULTI-STOCK ALGORITHM COMPARISON COMPLETED SUCCESSFULLY!")
     force_print("XGBoost vs Random Forest vs LSTM analysis ready for academic paper")
+    force_print(f"Dataset Statistics: {actual_samples} days × {len(processed_data)} stocks × {len(feature_columns)} features")
+    force_print(f"Total Data Points Processed: {actual_samples * len(processed_data) * len(feature_columns):,}")
+    force_print("Time-Series Cross-Validation: 3-fold TimeSeriesSplit implemented")
     force_print("Complete backup saved in 'multi_stocks_analysis.txt'")
     force_print("="*70)
 
