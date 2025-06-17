@@ -87,6 +87,16 @@ This research compares machine learning algorithms for financial time series pre
 - **Sector Variability**: Technology shows highest activity, Healthcare most conservative
 - **Model Used**: LSTM-based predictions for signal generation
 
+## Quick Results Preview
+
+### Performance Comparison Charts
+![MAE Comparison](results/mae_comparison_grouped.png)
+![RMSE Comparison](results/rmse_comparison_grouped.png)  
+![R² Comparison](results/r2_comparison_grouped.png)
+
+### Detailed Results
+View complete analysis: [results/multi_stocks_analysis.txt](results/multi_stocks_analysis.txt)
+
 ## Installation
 
 ### Prerequisites
@@ -96,7 +106,7 @@ This research compares machine learning algorithms for financial time series pre
 ### Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/multi-stock-ml-comparison.git
+git clone https://github.com/SUPERLenn/multi-stock-ml-comparison.git
 cd multi-stock-ml-comparison
 ```
 

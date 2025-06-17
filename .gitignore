@@ -19,9 +19,16 @@ venv.bak/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Distribution / packaging
@@ -40,21 +47,100 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# TensorFlow
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+log/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# TensorFlow/Keras
 *.ckpt
 *.meta
 *.index
-logs/
+*.h5
+*.hdf5
+*.pb
+tensorboard_logs/
+checkpoints/
+saved_models/
 
-# Data files (uncomment if you want to ignore data)
+# Scikit-learn/XGBoost models
+*.pkl
+*.joblib
+*.model
+models/
+
+# Data files (uncomment if you want to ignore large datasets)
 # *.csv
 # *.xlsx
-# *.pkl
-# *.joblib
-# *.h5
-# *.model
+# *.json
+# data/
+# datasets/
 
-# Keep project outputs
-!multi_stocks_analysis.txt
-!*_comparison_grouped.png
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Cache
+.cache/
+*.cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Results folder management
+results/*.log
+results/temp_*
+results/debug_*
+
+# Keep important project outputs
+!results/multi_stocks_analysis.txt
+!results/*_comparison_grouped.png
+
+# ML experiment tracking (if you use MLflow, Weights & Biases, etc.)
+mlruns/
+wandb/
+.neptune/
+
+# Large data downloads (if any)
+downloads/
+raw_data/
+
+# Compiled extensions
+*.dll
+*.dylib
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
