@@ -1,4 +1,4 @@
-# ===== XGBOOST vs RANDOM FOREST vs LSTM - MULTI STOCKS ANALYSIS with TRADING SIGNALS =====
+# ===== XGBOOST vs RANDOM FOREST vs LSTM - MULTI STOCKS ANALYSIS =====
 
 # Import system libraries for better control over output and environment
 import sys
@@ -36,7 +36,7 @@ def force_print(text):
 try:
     output_file = os.path.join(RESULTS_DIR, "multi_stocks_analysis.txt")
     with open(output_file, "w", encoding='utf-8') as f:
-        f.write("=== MULTI STOCKS ALGORITHM COMPARISON RESULTS (IMPROVED with TRADING SIGNALS) ===\n\n")
+        f.write("=== MULTI STOCKS ALGORITHM COMPARISON RESULTS (REVISED - MAE & RMSE FOCUS) ===\n\n")
 except:
     pass
 
@@ -44,6 +44,7 @@ except:
 force_print("STARTING 3 ALGORITHMS COMPARISON ON MULTIPLE STOCKS (2019-2024 DATA)")
 force_print("Data Period: Historical stock data from Yahoo Finance")
 force_print("Time Range: January 2019 to December 2024")
+force_print("Focus Metrics: MAE (Mean Absolute Error) and RMSE (Root Mean Squared Error)")
 
 try:
     # Import core data science and machine learning libraries
@@ -54,7 +55,7 @@ try:
     # Import scikit-learn components for machine learning
     from sklearn.ensemble import RandomForestRegressor      # Random Forest algorithm
     from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit  # Hyperparameter optimization and time series CV
-    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score  # Evaluation metrics
+    from sklearn.metrics import mean_absolute_error, mean_squared_error  # Evaluation metrics (REMOVED r2_score)
     from sklearn.preprocessing import MinMaxScaler          # Feature scaling for neural networks
     import xgboost as xgb        # XGBoost gradient boosting library
 
@@ -275,7 +276,7 @@ try:
                        'Hold'))                               # Otherwise, Hold
 
     # ===== PHASE 3: MODEL TRAINING AND EVALUATION =====
-    force_print("\n3. MODEL TRAINING AND EVALUATION\n--------------------------------")
+    force_print("\n3. MODEL TRAINING AND EVALUATION (MAE & RMSE FOCUS)\n--------------------------------------------------")
     
     # List to store results for all stocks
     results_summary = []
@@ -343,22 +344,20 @@ try:
             # Make predictions on test set
             rf_pred = rf_model.predict(X_test)
             
-            # Calculate performance metrics
+            # Calculate performance metrics (ONLY MAE & RMSE)
             rf_mae = mean_absolute_error(y_test, rf_pred)      # Mean Absolute Error
             rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))  # Root Mean Squared Error
-            rf_r2 = r2_score(y_test, rf_pred)                  # R² Score
             
             # Store results
             stock_results['rf_mae'] = rf_mae
             stock_results['rf_rmse'] = rf_rmse
-            stock_results['rf_r2'] = rf_r2
             
-            force_print(f"Random Forest - MAE: {rf_mae:.5f}, RMSE: {rf_rmse:.5f}, R²: {rf_r2:.5f}")
+            force_print(f"Random Forest - MAE: {rf_mae:.5f}, RMSE: {rf_rmse:.5f}")
             
         except Exception as e:
             force_print(f"Random Forest failed: {e}")
             # Set results to None if training failed
-            stock_results['rf_mae'] = stock_results['rf_rmse'] = stock_results['rf_r2'] = None
+            stock_results['rf_mae'] = stock_results['rf_rmse'] = None
 
         # ===== XGBOOST TRAINING =====
         force_print(f"\nTraining XGBoost for {symbol}...")
@@ -385,22 +384,20 @@ try:
             # Make predictions on test set
             xgb_pred = xgb_model.predict(X_test)
             
-            # Calculate performance metrics
+            # Calculate performance metrics (ONLY MAE & RMSE)
             xgb_mae = mean_absolute_error(y_test, xgb_pred)
             xgb_rmse = np.sqrt(mean_squared_error(y_test, xgb_pred))
-            xgb_r2 = r2_score(y_test, xgb_pred)
             
             # Store results
             stock_results['xgb_mae'] = xgb_mae
             stock_results['xgb_rmse'] = xgb_rmse
-            stock_results['xgb_r2'] = xgb_r2
             
-            force_print(f"XGBoost - MAE: {xgb_mae:.5f}, RMSE: {xgb_rmse:.5f}, R²: {xgb_r2:.5f}")
+            force_print(f"XGBoost - MAE: {xgb_mae:.5f}, RMSE: {xgb_rmse:.5f}")
             
         except Exception as e:
             force_print(f"XGBoost failed: {e}")
             # Set results to None if training failed
-            stock_results['xgb_mae'] = stock_results['xgb_rmse'] = stock_results['xgb_r2'] = None
+            stock_results['xgb_mae'] = stock_results['xgb_rmse'] = None
 
         # ===== LSTM TRAINING =====
         lstm_pred = None     # Initialize prediction variable
@@ -433,31 +430,29 @@ try:
                     # Make predictions and flatten to 1D array
                     lstm_pred = lstm_model.predict(X_test_lstm).flatten()
                     
-                    # Calculate performance metrics
+                    # Calculate performance metrics (ONLY MAE & RMSE)
                     lstm_mae = mean_absolute_error(y_test_lstm, lstm_pred)
                     lstm_rmse = np.sqrt(mean_squared_error(y_test_lstm, lstm_pred))
-                    lstm_r2 = r2_score(y_test_lstm, lstm_pred)
                     
                     # Store results
                     stock_results['lstm_mae'] = lstm_mae
                     stock_results['lstm_rmse'] = lstm_rmse
-                    stock_results['lstm_r2'] = lstm_r2
                     
-                    force_print(f"LSTM - MAE: {lstm_mae:.5f}, RMSE: {lstm_rmse:.5f}, R²: {lstm_r2:.5f}")
+                    force_print(f"LSTM - MAE: {lstm_mae:.5f}, RMSE: {lstm_rmse:.5f}")
                     
                 else:
                     force_print(f"Insufficient data for LSTM training")
-                    stock_results['lstm_mae'] = stock_results['lstm_rmse'] = stock_results['lstm_r2'] = None
+                    stock_results['lstm_mae'] = stock_results['lstm_rmse'] = None
                     
             except Exception as e:
                 force_print(f"LSTM failed: {e}")
-                stock_results['lstm_mae'] = stock_results['lstm_rmse'] = stock_results['lstm_r2'] = None
+                stock_results['lstm_mae'] = stock_results['lstm_rmse'] = None
         else:
             # Set LSTM results to None if TensorFlow not available
-            stock_results['lstm_mae'] = stock_results['lstm_rmse'] = stock_results['lstm_r2'] = None
+            stock_results['lstm_mae'] = stock_results['lstm_rmse'] = None
 
         # ===== TRADING SIGNAL GENERATION =====
-        # Choose the best model for signal generation
+        # Choose the best model for signal generation based on MAE
         signal_model = None
         pred_return = None
         y_true = None
@@ -567,10 +562,10 @@ try:
         results_summary.append(stock_results)
 
     # ===== PHASE 4: RESULTS ANALYSIS =====
-    force_print("\n4. COMPREHENSIVE RESULTS ANALYSIS\n---------------------------------")
+    force_print("\n4. COMPREHENSIVE RESULTS ANALYSIS (MAE & RMSE FOCUS)\n-------------------------------------------------")
     
     # Create formatted results table
-    header = f"{'Stock':<8} {'Company':<25} {'Algorithm':<12} {'MAE':<10} {'RMSE':<11} {'R² Score':<10}"
+    header = f"{'Stock':<8} {'Company':<25} {'Algorithm':<12} {'MAE':<10} {'RMSE':<11}"
     force_print(header)
     force_print("-" * len(header))
     
@@ -582,15 +577,15 @@ try:
         
         # Print Random Forest results
         if result['rf_mae'] is not None:
-            force_print(f"{symbol:<8} {name:<25} {'RF':<12} {result['rf_mae']:<10.5f} {result['rf_rmse']:<11.5f} {result['rf_r2']:<10.5f}")
+            force_print(f"{symbol:<8} {name:<25} {'RF':<12} {result['rf_mae']:<10.5f} {result['rf_rmse']:<11.5f}")
         
         # Print XGBoost results
         if result['xgb_mae'] is not None:
-            force_print(f"{'':<8} {'':<25} {'XGBoost':<12} {result['xgb_mae']:<10.5f} {result['xgb_rmse']:<11.5f} {result['xgb_r2']:<10.5f}")
+            force_print(f"{'':<8} {'':<25} {'XGBoost':<12} {result['xgb_mae']:<10.5f} {result['xgb_rmse']:<11.5f}")
         
         # Print LSTM results
         if result['lstm_mae'] is not None:
-            force_print(f"{'':<8} {'':<25} {'LSTM':<12} {result['lstm_mae']:<10.5f} {result['lstm_rmse']:<11.5f} {result['lstm_r2']:<10.5f}")
+            force_print(f"{'':<8} {'':<25} {'LSTM':<12} {result['lstm_mae']:<10.5f} {result['lstm_rmse']:<11.5f}")
         
         force_print("-" * len(header))
 
@@ -602,37 +597,34 @@ try:
         # Collect metrics for stocks where algorithm succeeded
         maes = [r[f'{algo}_mae'] for r in results_summary if r[f'{algo}_mae'] is not None]
         rmses = [r[f'{algo}_rmse'] for r in results_summary if r[f'{algo}_rmse'] is not None]
-        r2s = [r[f'{algo}_r2'] for r in results_summary if r[f'{algo}_r2'] is not None]
         
         if maes:  # Only calculate if we have data
             avg_performance[algo] = {
                 'avg_mae': np.mean(maes),     # Average MAE
                 'avg_rmse': np.mean(rmses),   # Average RMSE
-                'avg_r2': np.mean(r2s),       # Average R²
                 'std_mae': np.std(maes),      # Standard deviation of MAE
                 'std_rmse': np.std(rmses),    # Standard deviation of RMSE
-                'std_r2': np.std(r2s),        # Standard deviation of R²
                 'count': len(maes)            # Number of stocks
             }
     
     # Print average performance table
     force_print(f"\nAVERAGE PERFORMANCE ACROSS ALL STOCKS:")
-    force_print(f"{'Algorithm':<15} {'Avg MAE':<12} {'Avg RMSE':<13} {'Avg R²':<12} {'Stocks':<8}")
-    force_print("-" * 60)
+    force_print(f"{'Algorithm':<15} {'Avg MAE':<12} {'Avg RMSE':<13} {'Stocks':<8}")
+    force_print("-" * 48)
     
     algo_names = {'rf': 'Random Forest', 'xgb': 'XGBoost', 'lstm': 'LSTM'}
     for algo in algorithms:
         if algo in avg_performance:
             perf = avg_performance[algo]
-            force_print(f"{algo_names[algo]:<15} {perf['avg_mae']:<11.5f} {perf['avg_rmse']:<12.5f} {perf['avg_r2']:<12.5f} {perf['count']:<8}")
+            force_print(f"{algo_names[algo]:<15} {perf['avg_mae']:<11.5f} {perf['avg_rmse']:<12.5f} {perf['count']:<8}")
 
-    # Count algorithm wins across all metrics
-    force_print("\nALGORITHM PERFORMANCE WINS:")
-    force_print(f"{'Algorithm':<15} {'MAE Wins':<10} {'RMSE Wins':<11} {'R² Wins':<10} {'Total':<8}")
-    force_print("-" * 54)
+    # Count algorithm wins across MAE and RMSE only
+    force_print("\nALGORITHM PERFORMANCE WINS (MAE & RMSE):")
+    force_print(f"{'Algorithm':<15} {'MAE Wins':<10} {'RMSE Wins':<11} {'Total':<8}")
+    force_print("-" * 44)
     
     # Initialize win counters
-    wins = {algo: {'mae': 0, 'rmse': 0, 'r2': 0} for algo in algorithms}
+    wins = {algo: {'mae': 0, 'rmse': 0} for algo in algorithms}
     
     # Count wins for each stock
     for result in results_summary:
@@ -640,20 +632,17 @@ try:
         valid_algos = [algo for algo in algorithms if result[f'{algo}_mae'] is not None]
         
         if len(valid_algos) >= 2:  # Need at least 2 algorithms to compare
-            # Find best performer for each metric (lower is better for MAE/RMSE, higher for R²)
+            # Find best performer for each metric (lower is better for MAE/RMSE)
             best_mae = min(valid_algos, key=lambda x: result[f'{x}_mae'])
             wins[best_mae]['mae'] += 1
             
             best_rmse = min(valid_algos, key=lambda x: result[f'{x}_rmse'])
             wins[best_rmse]['rmse'] += 1
-            
-            best_r2 = max(valid_algos, key=lambda x: result[f'{x}_r2'])
-            wins[best_r2]['r2'] += 1
     
     # Print win counts
     for algo in algorithms:
-        total_wins = wins[algo]['mae'] + wins[algo]['rmse'] + wins[algo]['r2']
-        force_print(f"{algo_names[algo]:<15} {wins[algo]['mae']:<10} {wins[algo]['rmse']:<11} {wins[algo]['r2']:<10} {total_wins:<8}")
+        total_wins = wins[algo]['mae'] + wins[algo]['rmse']
+        force_print(f"{algo_names[algo]:<15} {wins[algo]['mae']:<10} {wins[algo]['rmse']:<11} {total_wins:<8}")
 
     # ===== ACTUAL DATASET STATISTICS =====
     if processed_data:
@@ -678,14 +667,16 @@ try:
     force_print(f"• Dataset period: 2019-2024 with comprehensive technical indicators")
     force_print(f"• Total trading days analyzed: {actual_samples} per stock")
     force_print(f"• Cross-sector validation across {len(stocks_info)} major industries")
+    force_print(f"• Focus metrics: MAE and RMSE for robust evaluation")
     
     # Determine overall best algorithm
-    best_overall = max(algorithms, key=lambda x: wins[x]['mae'] + wins[x]['rmse'] + wins[x]['r2'] if x in wins else 0)
+    best_overall = max(algorithms, key=lambda x: wins[x]['mae'] + wins[x]['rmse'] if x in wins else 0)
     force_print(f"• {algo_names[best_overall]} showed superior overall performance")
     
     if best_overall in avg_performance:
         best_perf = avg_performance[best_overall]
-        force_print(f"• Best algorithm average R²: {best_perf['avg_r2']:.5f}")
+        force_print(f"• Best algorithm average MAE: {best_perf['avg_mae']:.5f}")
+        force_print(f"• Best algorithm average RMSE: {best_perf['avg_rmse']:.5f}")
         force_print(f"• Cross-sector validation shows consistent performance patterns")
     
     force_print(f"• Technical indicators provide robust foundation for return prediction")
@@ -698,10 +689,11 @@ try:
     force_print(f"Dataset Statistics: {actual_samples} days × {len(processed_data)} stocks × {len(feature_columns)} features")
     force_print(f"Total Data Points Processed: {actual_samples * len(processed_data) * len(feature_columns):,}")
     force_print("Time-Series Cross-Validation: 3-fold TimeSeriesSplit implemented")
+    force_print("Evaluation Focus: MAE & RMSE metrics for robust comparison")
     force_print("Complete backup saved in 'multi_stocks_analysis.txt'")
     force_print("="*70)
 
-    # ===== PHASE 5: VISUALIZATION GENERATION =====
+    # ===== PHASE 5: VISUALIZATION GENERATION (MAE & RMSE ONLY) =====
     import pandas as pd      # For data manipulation
     import matplotlib.pyplot as plt  # For plotting
     import numpy as np       # For numerical operations
@@ -709,13 +701,13 @@ try:
     # Create dataframe for visualization
     df_plot = pd.DataFrame([
             # Random Forest results for all stocks
-            {"Stock": r['symbol'], "Algorithm": "Random Forest", "MAE": r['rf_mae'], "RMSE": r['rf_rmse'], "R2": r['rf_r2']} for r in results_summary
+            {"Stock": r['symbol'], "Algorithm": "Random Forest", "MAE": r['rf_mae'], "RMSE": r['rf_rmse']} for r in results_summary
         ] + [
             # XGBoost results for all stocks
-            {"Stock": r['symbol'], "Algorithm": "XGBoost", "MAE": r['xgb_mae'], "RMSE": r['xgb_rmse'], "R2": r['xgb_r2']} for r in results_summary
+            {"Stock": r['symbol'], "Algorithm": "XGBoost", "MAE": r['xgb_mae'], "RMSE": r['xgb_rmse']} for r in results_summary
         ] + [
             # LSTM results for all stocks
-            {"Stock": r['symbol'], "Algorithm": "LSTM", "MAE": r['lstm_mae'], "RMSE": r['lstm_rmse'], "R2": r['lstm_r2']} for r in results_summary
+            {"Stock": r['symbol'], "Algorithm": "LSTM", "MAE": r['lstm_mae'], "RMSE": r['lstm_rmse']} for r in results_summary
         ])
     
     # Sort data for consistent visualization
@@ -724,13 +716,12 @@ try:
     # Define visualization parameters
     stocks = df_plot["Stock"].unique()                    # List of stock symbols
     algorithms = ["Random Forest", "XGBoost", "LSTM"]    # List of algorithms
-    metrics = ["MAE", "RMSE", "R2"]                      # List of metrics to plot
+    metrics = ["MAE", "RMSE"]                            # List of metrics to plot (REMOVED R²)
     
     # Metric titles for chart labels
     metric_titles = {
             "MAE": "MAE (Mean Absolute Error)",
-            "RMSE": "RMSE (Root Mean Squared Error)",
-            "R2": "R² Score"
+            "RMSE": "RMSE (Root Mean Squared Error)"
         }
     
     # Color scheme for different algorithms
@@ -755,7 +746,7 @@ try:
                 # Get metric value for each stock
                 for stock in stocks:
                     val_list = df_plot[(df_plot["Stock"] == stock) & (df_plot["Algorithm"] == algo)][metric].values
-                    val = val_list[0] if len(val_list) > 0 else np.nan  # Use first value or NaN
+                    val = val_list[0] if len(val_list) > 0 and not np.isnan(val_list[0]) else 0  # Use first value or 0
                     vals.append(val)
                 
                 # Create bars with offset for each algorithm
@@ -763,20 +754,11 @@ try:
                 
                 # Add value labels on top of each bar
                 for rect, vi in zip(bars, vals):
-                    if not np.isnan(vi):  # Only label if value exists
+                    if vi > 0:  # Only label if value exists
                         height = rect.get_height()
-                        if vi >= 0:
-                            va = "bottom"     # Label above bar
-                            y = height + 0.001
-                        else:
-                            va = "top"        # Label below bar
-                            y = height - 0.001
                         # Add text label with value
-                        plt.text(rect.get_x() + rect.get_width() / 2., y, f"{vi:.3f}", ha="center", va=va, fontsize=9)
+                        plt.text(rect.get_x() + rect.get_width() / 2., height + 0.0005, f"{vi:.3f}", ha="center", va="bottom", fontsize=9)
 
-            # Add horizontal reference line at y=0
-            plt.axhline(0, color="gray", linewidth=1, linestyle="--")
-            
             # Customize chart appearance
             plt.xlabel("Stock", fontsize=12)
             plt.ylabel(metric_titles[metric], fontsize=12)
@@ -790,7 +772,7 @@ try:
             plt.savefig(chart_path)
             plt.show()  # Display chart
 
-    force_print("Visualization Successful 'mae_comparison_grouped.png', 'rmse_comparison_grouped.png', and 'r2_comparison_grouped.png'.")
+    force_print("Visualization Successful: 'mae_comparison_grouped.png' and 'rmse_comparison_grouped.png' generated.")
 
 # ===== ERROR HANDLING =====
 except Exception as e:
