@@ -61,16 +61,36 @@ This research compares machine learning algorithms for financial time series pre
 ## Key Results
 
 ### Algorithm Performance Summary
-| Algorithm | Avg MAE | Avg RMSE | Avg R² | Total Wins |
-|-----------|---------|----------|---------|------------|
-| **LSTM** | 0.00999 | 0.01356 | -0.04537 | **12** |
-| **XGBoost** | 0.01062 | 0.01433 | -0.15458 | 3 |
-| **Random Forest** | 0.01361 | 0.01767 | -0.74144 | 0 |
+| Algorithm | Avg MAE | Avg RMSE | Performance Rank |
+|-----------|---------|----------|------------------|
+| **LSTM** | 0.00999 | 0.01356 | **1st** |
+| **XGBoost** | 0.01062 | 0.01433 | 2nd |
+| **Random Forest** | 0.01361 | 0.01767 | 3rd |
 
 ### Performance Wins by Metric
-- **MAE Wins**: LSTM (4), XGBoost (1), Random Forest (0)
-- **RMSE Wins**: LSTM (4), XGBoost (1), Random Forest (0)  
-- **R² Wins**: LSTM (4), XGBoost (1), Random Forest (0)
+- **MAE Wins**: LSTM (4), Random Forest (1), XGBoost (0)
+- **RMSE Wins**: LSTM (3), Random Forest (1), XGBoost (1)
+- **Total Wins**: LSTM (7), Random Forest (2), XGBoost (1)
+
+## Individual Stock Performance
+
+| Stock | Algorithm | MAE | RMSE |
+|-------|-----------|-----|------|
+| **AAPL** | LSTM | 0.01058 | 0.01419 |
+|  | XGBoost | 0.01096 | 0.01454 |
+|  | Random Forest | 0.01252 | 0.01614 |
+| **JPM** | LSTM | 0.00984 | 0.01461 |
+|  | XGBoost | 0.01032 | 0.01534 |
+|  | Random Forest | 0.01175 | 0.01624 |
+| **AMZN** | LSTM | 0.01284 | 0.01735 |
+|  | XGBoost | 0.01476 | 0.01953 |
+|  | Random Forest | 0.02542 | 0.03123 |
+| **XOM** | LSTM | 0.00955 | 0.01210 |
+|  | XGBoost | 0.01014 | 0.01288 |
+|  | Random Forest | 0.01134 | 0.01521 |
+| **JNJ** | Random Forest | 0.00704 | 0.00953 |
+|  | XGBoost | 0.00691 | 0.00937 |
+|  | LSTM | 0.00715 | 0.00954 |
 
 ## Trading Signal Performance
 
@@ -84,15 +104,21 @@ This research compares machine learning algorithms for financial time series pre
 ### Signal Accuracy Framework
 - **Threshold**: ±0.5% for buy/sell decisions
 - **Conservative Approach**: 88.8% - 100% hold signals across sectors
-- **Sector Variability**: Technology shows highest activity, Healthcare most conservative
+- **Sector Variability**: Technology shows highest activity, Healthcare and Consumer Retail most conservative
 - **Model Used**: LSTM-based predictions for signal generation
+
+### Trading Signal Summary
+- **Total signals across all stocks**: 6 buy signals, 35 sell signals, 1,389 hold signals
+- **Action signal frequency**: varies from 0% (AMZN, JNJ) to 11.2% (AAPL)
+- **Most active sector**: Technology (AAPL) with 11.2% action signals
+- **Most conservative sectors**: Healthcare (JNJ) and Consumer Retail (AMZN) with 0% action signals
+- **Overall strategy**: Predominantly conservative "hold" approach with selective action signals
 
 ## Quick Results Preview
 
 ### Performance Comparison Charts
 ![MAE Comparison](results/mae_comparison_grouped.png)
-![RMSE Comparison](results/rmse_comparison_grouped.png)  
-![R² Comparison](results/r2_comparison_grouped.png)
+![RMSE Comparison](results/rmse_comparison_grouped.png)
 
 ### Detailed Results
 View complete analysis: [results/multi_stocks_analysis.txt](results/multi_stocks_analysis.txt)
@@ -128,7 +154,7 @@ pip install -r requirements.txt
 - yfinance >= 0.2.0
 - scikit-learn >= 1.1.0
 - xgboost >= 1.6.0
-- tensorflow >= 2.8.0
+- tensorflow >= 2.13.0
 - matplotlib >= 3.5.0
 
 ## Usage
@@ -142,7 +168,7 @@ python stock_algorithm_comparison.py
 - **Data Collection**: ~30 seconds (5 stocks × 6 years)
 - **Feature Engineering**: ~15 seconds (28 indicators per stock)
 - **Model Training**: 5-10 minutes (hyperparameter optimization)
-- **Visualization**: ~10 seconds (3 comparison charts)
+- **Visualization**: ~10 seconds (2 comparison charts)
 
 ## Output Files
 
@@ -150,12 +176,11 @@ python stock_algorithm_comparison.py
 - `multi_stocks_analysis.txt` - Comprehensive results and statistics
 - `mae_comparison_grouped.png` - Mean Absolute Error comparison chart
 - `rmse_comparison_grouped.png` - Root Mean Squared Error comparison chart
-- `r2_comparison_grouped.png` - R² Score comparison chart
 
 ### Expected Results
 After running the analysis, you should see:
-- **LSTM wins 12/15 performance metrics** across all stocks
-- **Negative R² values** (typical for short-term stock prediction)
+- **LSTM wins 7/10 performance metrics** across all stocks
+- **Consistent MAE and RMSE superiority** for LSTM algorithm
 - **Conservative trading signals** with 0-11.2% action frequency
 - **Sector-specific patterns** in model performance and signal generation
 
@@ -183,7 +208,7 @@ After running the analysis, you should see:
 ### 3. Model Training & Evaluation
 - Hyperparameter optimization via RandomizedSearchCV
 - Time series cross-validation (3-fold TimeSeriesSplit)
-- Performance evaluation (MAE, RMSE, R²)
+- Performance evaluation (MAE, RMSE)
 
 ### 4. Trading Signal Generation
 - Threshold-based signal creation (±0.5%)
@@ -192,17 +217,17 @@ After running the analysis, you should see:
 
 ### 5. Results Analysis & Visualization
 - Statistical performance comparison
-- Win-count analysis across 15 metrics (3 metrics × 5 stocks)
+- Win-count analysis across 10 metrics (2 metrics × 5 stocks)
 - Automated chart generation with matplotlib
 
 ## Key Findings
 
-1. **LSTM Superior Performance**: Achieved best results in 12/15 performance metrics
+1. **LSTM Superior Performance**: Achieved best results in 7/10 performance metrics with average MAE of 0.00999
 2. **Cross-Sector Consistency**: Performance patterns consistent across Technology, Financial, Consumer Retail, Energy, and Healthcare sectors
 3. **Technical Indicator Effectiveness**: 28-feature engineering approach provides robust prediction foundation
 4. **Algorithm Generalizability**: Multi-stock analysis confirms LSTM reliability across diverse market sectors
 5. **Conservative Trading Signals**: Most sectors show 0-1.7% action signals, with Technology sector most active (11.2%)
-6. **Sector-Specific Behavior**: Healthcare and Consumer Retail show complete conservatism, Financial and Energy show moderate activity
+6. **Sector-Specific Behavior**: Healthcare and Consumer Retail show complete conservatism, Technology shows mixed signals, Financial and Energy show moderate bearish bias
 
 ## Research Applications
 
@@ -221,8 +246,7 @@ multi-stock-ml-comparison/
 ├── results/
 │   ├── multi_stocks_analysis.txt        # Generated results
 │   ├── mae_comparison_grouped.png       # MAE visualization
-│   ├── rmse_comparison_grouped.png      # RMSE visualization
-│   └── r2_comparison_grouped.png        # R² visualization
+│   └── rmse_comparison_grouped.png      # RMSE visualization
 ├── requirements.txt                     # Project dependencies
 ├── README.md                           # Project documentation
 ├── LICENSE                             # MIT License
@@ -232,16 +256,23 @@ multi-stock-ml-comparison/
 ## Model Performance Details
 
 ### Individual Stock Results
-- **Best performing stock**: JNJ (Healthcare) - most stable predictions
-- **Most challenging stock**: AMZN (Consumer Retail) - highest volatility
-- **Technology sector (AAPL)**: Moderate performance with highest signal activity
-- **Financial sector (JPM)**: Good performance with conservative signals
-- **Energy sector (XOM)**: Good performance with bearish signal bias
+- **Best performing stock**: JNJ (Healthcare) - most stable predictions with Random Forest achieving lowest MAE (0.00704)
+- **Most challenging stock**: AMZN (Consumer Retail) - highest volatility, LSTM performs significantly better than Random Forest
+- **Technology sector (AAPL)**: LSTM achieves best performance with moderate trading signal activity (11.2%)
+- **Financial sector (JPM)**: LSTM shows superior performance with low signal activity (1.4%)
+- **Energy sector (XOM)**: Close competition between LSTM and XGBoost, with moderate bearish signals
 
 ### Algorithm Strengths
-- **LSTM**: Superior at capturing temporal dependencies and sequential patterns
-- **XGBoost**: Competitive performance with faster training times
-- **Random Forest**: Consistent underperformance due to lack of time-aware modeling
+- **LSTM**: Superior at capturing temporal dependencies and sequential patterns, particularly effective in volatile sectors
+- **XGBoost**: Competitive performance with faster training times, particularly strong in stable healthcare sector
+- **Random Forest**: Best performance in low-volatility healthcare sector (JNJ), struggles with high-volatility stocks
+
+### Trading Signal Patterns
+- **Technology Sector**: Mixed signals with 11.2% action ratio, predominantly bearish tendency
+- **Financial Sector**: Conservative approach with slight bearish bias (1.4% actions)
+- **Consumer Retail**: Complete conservatism reflecting high uncertainty in volatile retail market
+- **Energy Sector**: Moderate bearish signals (1.7% actions) reflecting sector challenges
+- **Healthcare Sector**: Complete conservatism indicating sector stability and predictability challenges
 
 ## Contributing
 
@@ -266,7 +297,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Disclaimer
 
-⚠️ **Important**: This project is for educational and research purposes only. It is not financial advice. Past performance does not guarantee future results. The negative R² values indicate that short-term stock return prediction remains extremely challenging. Always consult with qualified financial professionals before making investment decisions.
+⚠️ **Important**: This project is for educational and research purposes only. It is not financial advice. Past performance does not guarantee future results. The moderate prediction accuracy indicates that short-term stock return prediction remains extremely challenging. Always consult with qualified financial professionals before making investment decisions.
 
 ---
 
